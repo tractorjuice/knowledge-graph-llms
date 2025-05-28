@@ -1,10 +1,10 @@
 # Knowledge Graph Generator
 
-A Streamlit application that generates interactive knowledge graphs from text input using LangChain and OpenAI's GPT models.
+A Streamlit application that extract graph data (entities and relationships) from text input using LangChain and OpenAI's GPT models, and generates interactive graphs.
+![CleanShot 2025-05-28 at 13 11 46](https://github.com/user-attachments/assets/4fef9158-8dd8-432d-bb8a-b53953a82c6c)
 
-## Description
-
-This application allows users to visualize relationships between entities mentioned in text by generating an interactive knowledge graph. Users can input text either by uploading a .txt file or by typing directly into the application. The app then processes this text using LangChain's graph transformers and OpenAI's language models to extract entities and relationships, which are visualized as an interactive network graph.
+👉 This repo is part of my project tutorial on Youtube:
+[![](https://img.youtube.com/vi/O-T_6KOXML4/0.jpg)](https://www.youtube.com/watch?v=O-T_6KOXML4)
 
 ## Features
 
