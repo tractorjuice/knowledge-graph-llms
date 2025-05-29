@@ -4,7 +4,7 @@ An enhanced Streamlit application that extracts graph data (entities and relatio
 
 ## Example Graph Visualization
 
-![Knowledge Graph Example](assets/wardley_mapping_graph.png)
+<img src="assets/wardley_mapping_graph.png" alt="Knowledge Graph Example" width="800">
 
 *Example graph generated from Wardley Mapping documentation showing entities and relationships with interactive visualization.*
 
