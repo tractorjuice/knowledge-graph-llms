@@ -5,9 +5,9 @@ from generate_knowledge_graph import generate_knowledge_graph
 
 # Set up Streamlit page configuration
 st.set_page_config(
-    page_icon=None, 
+    page_icon=None,
     layout="wide",  # Use wide layout for better graph display
-    initial_sidebar_state="auto", 
+    initial_sidebar_state="auto",
     menu_items=None
 )
 
@@ -25,25 +25,43 @@ input_method = st.sidebar.radio(
 if input_method == "Upload txt":
     # File uploader widget in the sidebar
     uploaded_file = st.sidebar.file_uploader(label="Upload file", type=["txt"])
-    
+
     if uploaded_file is not None:
         # Read the uploaded file content and decode it as UTF-8 text
         text = uploaded_file.read().decode("utf-8")
- 
+
         # Button to generate the knowledge graph
         if st.sidebar.button("Generate Knowledge Graph"):
-            with st.spinner("Generating knowledge graph..."):
+            # Create progress elements
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            def update_progress(current, total, message):
+                progress = current / total if total > 0 else 0
+                progress_bar.progress(progress)
+                status_text.text(message)
+            
+            try:
                 # Call the function to generate the graph from the text
-                net = generate_knowledge_graph(text)
+                net = generate_knowledge_graph(text, progress_callback=update_progress)
+                
+                # Clear progress elements and show success
+                progress_bar.empty()
+                status_text.empty()
                 st.success("Knowledge graph generated successfully!")
                 
                 # Save the graph to an HTML file
                 output_file = "knowledge_graph.html"
-                net.save_graph(output_file) 
+                net.save_graph(output_file)
 
                 # Open the HTML file and display it within the Streamlit app
                 HtmlFile = open(output_file, 'r', encoding='utf-8')
                 components.html(HtmlFile.read(), height=1000)
+                
+            except Exception as e:
+                progress_bar.empty()
+                status_text.empty()
+                st.error(f"Error generating knowledge graph: {str(e)}")
 
 # Case 2: User chooses to directly input text
 else:
@@ -52,15 +70,33 @@ else:
 
     if text:  # Check if the text area is not empty
         if st.sidebar.button("Generate Knowledge Graph"):
-            with st.spinner("Generating knowledge graph..."):
+            # Create progress elements
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            def update_progress(current, total, message):
+                progress = current / total if total > 0 else 0
+                progress_bar.progress(progress)
+                status_text.text(message)
+            
+            try:
                 # Call the function to generate the graph from the input text
-                net = generate_knowledge_graph(text)
-                st.success("Knowledge graph generated successfully!")
+                net = generate_knowledge_graph(text, progress_callback=update_progress)
                 
+                # Clear progress elements and show success
+                progress_bar.empty()
+                status_text.empty()
+                st.success("Knowledge graph generated successfully!")
+
                 # Save the graph to an HTML file
                 output_file = "knowledge_graph.html"
-                net.save_graph(output_file) 
+                net.save_graph(output_file)
 
                 # Open the HTML file and display it within the Streamlit app
                 HtmlFile = open(output_file, 'r', encoding='utf-8')
                 components.html(HtmlFile.read(), height=1000)
+                
+            except Exception as e:
+                progress_bar.empty()
+                status_text.empty()
+                st.error(f"Error generating knowledge graph: {str(e)}")

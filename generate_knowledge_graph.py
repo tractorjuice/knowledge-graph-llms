@@ -40,7 +40,9 @@ def chunk_text(text, max_tokens=100000):
     # Define headers to split on
     headers_to_split_on = [
         ("#", "Header 1"),
-        ("##", "Header 2"), 
+        ("##", "Header 2"),
+        ("###", "Header 3"),
+        ("####", "Header 4"),
     ]
 
     # Split by markdown headers first
@@ -74,12 +76,14 @@ def chunk_text(text, max_tokens=100000):
 
 
 # Extract graph data from text chunks
-async def extract_graph_data(chunks):
+async def extract_graph_data(chunks, progress_callback=None):
     """
     Asynchronously extracts graph data from text chunks using a graph transformer.
 
     Args:
         chunks (list): List of text chunks to be processed into graph format.
+        progress_callback (callable, optional): Function to call with progress updates.
+                                               Should accept (current, total, message) parameters.
 
     Returns:
         list: A list of GraphDocument objects containing nodes and relationships.
@@ -87,11 +91,19 @@ async def extract_graph_data(chunks):
     all_graph_documents = []
 
     for i, chunk in enumerate(chunks, 1):
-        print(f"Processing chunk {i}/{len(chunks)}...")
+        message = f"Processing chunk {i}/{len(chunks)}..."
+        print(message)
+        if progress_callback:
+            progress_callback(i-1, len(chunks), message)
+        
         documents = [Document(page_content=chunk)]
         graph_documents = await graph_transformer.aconvert_to_graph_documents(documents)
         all_graph_documents.extend(graph_documents)
-        print(f"✓ Chunk {i}/{len(chunks)} complete")
+        
+        complete_message = f"✓ Chunk {i}/{len(chunks)} complete"
+        print(complete_message)
+        if progress_callback:
+            progress_callback(i, len(chunks), complete_message)
 
     return all_graph_documents
 
@@ -176,7 +188,7 @@ def visualize_graph(graph_documents):
         return None
 
 
-def generate_knowledge_graph(text):
+def generate_knowledge_graph(text, progress_callback=None):
     """
     Generates and visualizes a knowledge graph from input text.
 
@@ -185,6 +197,8 @@ def generate_knowledge_graph(text):
 
     Args:
         text (str): Input text to convert into a knowledge graph.
+        progress_callback (callable, optional): Function to call with progress updates.
+                                               Should accept (current, total, message) parameters.
 
     Returns:
         pyvis.network.Network: The visualized network graph object.
@@ -197,9 +211,18 @@ def generate_knowledge_graph(text):
     print(f"Input text: {token_count:,} tokens")
     print(f"Processing in {len(chunks)} chunk(s)")
 
-    graph_documents = asyncio.run(extract_graph_data(chunks))
+    graph_documents = asyncio.run(extract_graph_data(chunks, progress_callback))
 
-    print("Building graph visualization...")
+    message = "Building graph visualization..."
+    print(message)
+    if progress_callback:
+        progress_callback(len(chunks), len(chunks), message)
+    
     net = visualize_graph(graph_documents)
-    print("✓ Graph generation complete!")
+    
+    complete_message = "✓ Graph generation complete!"
+    print(complete_message)
+    if progress_callback:
+        progress_callback(len(chunks), len(chunks), complete_message)
+    
     return net
