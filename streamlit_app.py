@@ -36,10 +36,23 @@ if input_method == "Upload file":
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            def update_progress(current, total, message):
+            def update_progress(current, total, message, time_estimate=None):
                 progress = current / total if total > 0 else 0
                 progress_bar.progress(progress)
-                status_text.text(message)
+                
+                # Add time estimate to message if available
+                if time_estimate is not None and time_estimate > 0:
+                    if time_estimate < 60:
+                        time_str = f" (Est. {time_estimate:.0f}s remaining)"
+                    else:
+                        minutes = int(time_estimate // 60)
+                        seconds = int(time_estimate % 60)
+                        time_str = f" (Est. {minutes}m {seconds}s remaining)"
+                    display_message = message + time_str
+                else:
+                    display_message = message
+                
+                status_text.text(display_message)
             
             try:
                 # Call the function to generate the graph from the text
@@ -74,10 +87,23 @@ else:
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            def update_progress(current, total, message):
+            def update_progress(current, total, message, time_estimate=None):
                 progress = current / total if total > 0 else 0
                 progress_bar.progress(progress)
-                status_text.text(message)
+                
+                # Add time estimate to message if available
+                if time_estimate is not None and time_estimate > 0:
+                    if time_estimate < 60:
+                        time_str = f" (Est. {time_estimate:.0f}s remaining)"
+                    else:
+                        minutes = int(time_estimate // 60)
+                        seconds = int(time_estimate % 60)
+                        time_str = f" (Est. {minutes}m {seconds}s remaining)"
+                    display_message = message + time_str
+                else:
+                    display_message = message
+                
+                status_text.text(display_message)
             
             try:
                 # Call the function to generate the graph from the input text

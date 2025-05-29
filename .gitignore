@@ -81,5 +81,8 @@ Desktop.ini
 
 # Generated files
 knowledge_graph.html
+knowledge_graph.json
+knowledge_graph.graphml
+knowledge_graph.gml
 
 wardley_mapping.md
