@@ -132,7 +132,7 @@ async def extract_graph_data(chunks, progress_callback=None):
     return all_graph_documents
 
 
-def save_graph_formats(graph_documents, base_filename="knowledge_graph"):
+def save_graph_formats(graph_documents, base_filename="graph/knowledge_graph"):
     """
     Save the graph in multiple formats (JSON, GraphML, GML).
     
@@ -174,6 +174,9 @@ def save_graph_formats(graph_documents, base_filename="knowledge_graph"):
         G.add_edge(rel.source.id, rel.target.id, relationship=rel.type, label=rel.type.lower())
     
     try:
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(base_filename), exist_ok=True)
+        
         # Save as JSON
         json_file = f"{base_filename}.json"
         graph_data = {
@@ -273,8 +276,9 @@ def visualize_graph(graph_documents):
         }
     """)
 
-    output_file = "knowledge_graph.html"
+    output_file = "graph/knowledge_graph.html"
     try:
+        os.makedirs("graph", exist_ok=True)
         net.save_graph(output_file)
         print(f"Graph saved to {os.path.abspath(output_file)}")
         return net

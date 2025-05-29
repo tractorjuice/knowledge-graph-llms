@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Graph Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">
+                    <span class="icon">🕸️</span>
+                    Knowledge Graph Explorer
+                </h1>
+                <div class="header-controls">
+                    <button id="loadBtn" class="btn btn-primary">📁 Load Graph</button>
+                    <button id="statsBtn" class="btn btn-secondary">📊 Stats</button>
+                    <button id="exportBtn" class="btn btn-secondary">💾 Export</button>
+                    <button id="fullscreenBtn" class="btn btn-secondary">⛶ Fullscreen</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel" id="controlsPanel">
+            <div class="controls-header">
+                <h3>Filters & Controls</h3>
+                <button id="toggleControls" class="btn btn-small">−</button>
+            </div>
+            
+            <div class="controls-content" id="controlsContent">
+                <div class="control-group">
+                    <label for="nodeFilter">Filter by Node Type:</label>
+                    <select id="nodeFilter" multiple placeholder="Select node types..."></select>
+                </div>
+
+                <div class="control-group">
+                    <label for="relationshipFilter">Filter by Relationship:</label>
+                    <select id="relationshipFilter" multiple placeholder="Select relationships..."></select>
+                </div>
+
+                <div class="control-group">
+                    <label for="searchInput">Search Nodes:</label>
+                    <input type="text" id="searchInput" placeholder="Search for nodes..." class="search-input">
+                </div>
+
+                <div class="control-actions">
+                    <button id="resetFilters" class="btn btn-primary">🔄 Reset Filters</button>
+                    <button id="centerGraph" class="btn btn-primary">🎯 Center Graph</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Container -->
+        <div class="graph-container">
+            <div id="loadingBar" class="loading-bar">
+                <div id="loadingText" class="loading-text">Loading graph...</div>
+                <div class="progress-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+            </div>
+            <div id="networkContainer" class="network-container"></div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="info-panel" id="infoPanel">
+            <div class="info-header">
+                <h3>Node Information</h3>
+                <button id="closeInfo" class="btn btn-small">×</button>
+            </div>
+            <div class="info-content" id="infoContent">
+                <p>Click on a node to see detailed information...</p>
+            </div>
+        </div>
+
+        <!-- Stats Modal -->
+        <div id="statsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Graph Statistics</h3>
+                    <button id="closeStats" class="btn btn-small">×</button>
+                </div>
+                <div class="modal-body" id="statsContent">
+                    <!-- Stats will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="exportModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Export Graph</h3>
+                    <button id="closeExport" class="btn btn-small">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-options">
+                        <button id="exportJSON" class="btn btn-primary">📄 Export as JSON</button>
+                        <button id="exportCSV" class="btn btn-primary">📊 Export as CSV</button>
+                        <button id="exportPNG" class="btn btn-primary">🖼️ Export as PNG</button>
+                        <button id="exportGraphML" class="btn btn-primary">🔗 Export as GraphML</button>
+                        <button id="exportGML" class="btn btn-primary">📈 Export as GML</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Modal -->
+        <div id="loadModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Load Graph Data</h3>
+                    <button id="closeLoad" class="btn btn-small">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="load-options">
+                        <div class="load-section">
+                            <h4>Upload Files</h4>
+                            <p class="help-text">Support: JSON, GraphML, GML formats</p>
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <input type="file" id="fileInput" multiple accept=".json,.graphml,.gml" style="display: none;">
+                                <div class="upload-prompt">
+                                    <span class="upload-icon">📁</span>
+                                    <p>Click to select files or drag & drop here</p>
+                                    <p class="file-types">Supports: JSON, GraphML, GML</p>
+                                </div>
+                            </div>
+                            <div id="selectedFiles" class="selected-files"></div>
+                        </div>
+
+                        <div class="load-section">
+                            <h4>Load from URL</h4>
+                            <div class="url-input-group">
+                                <input type="url" id="urlInput" placeholder="https://example.com/graph.json" class="url-input">
+                                <button id="loadFromURL" class="btn btn-primary">Load</button>
+                            </div>
+                        </div>
+
+                        <div class="load-section">
+                            <h4>Quick Load (Generated Files)</h4>
+                            <div class="quick-load-buttons">
+                                <button id="loadKnowledgeGraphJSON" class="btn btn-secondary">📄 graph/knowledge_graph.json</button>
+                                <button id="loadKnowledgeGraphML" class="btn btn-secondary">🔗 graph/knowledge_graph.graphml</button>
+                                <button id="loadKnowledgeGML" class="btn btn-secondary">📈 graph/knowledge_graph.gml</button>
+                            </div>
+                        </div>
+
+                        <div class="load-actions">
+                            <button id="clearGraph" class="btn btn-warning">🗑️ Clear Current Graph</button>
+                            <button id="loadSampleData" class="btn btn-secondary">🎲 Load Sample Data</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

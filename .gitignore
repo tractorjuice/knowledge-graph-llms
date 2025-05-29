@@ -79,10 +79,15 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Generated files
-knowledge_graph.html
-knowledge_graph.json
-knowledge_graph.graphml
-knowledge_graph.gml
+# Generated files in graph directory
+graph/knowledge_graph.html
+graph/knowledge_graph.json
+graph/knowledge_graph.graphml
+graph/knowledge_graph.gml
+
+# JavaScript app with actual data (contains sample for demo)
+# Remove this line if you want to track your specific graph data
+# js-app/js/graphData.js
 
 wardley_mapping.md
+graph/

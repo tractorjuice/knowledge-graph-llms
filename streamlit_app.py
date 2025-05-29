@@ -64,7 +64,7 @@ if input_method == "Upload file":
                 st.success("Knowledge graph generated successfully!")
                 
                 # Save the graph to an HTML file
-                output_file = "knowledge_graph.html"
+                output_file = "graph/knowledge_graph.html"
                 net.save_graph(output_file)
 
                 # Open the HTML file and display it within the Streamlit app
@@ -115,7 +115,7 @@ else:
                 st.success("Knowledge graph generated successfully!")
 
                 # Save the graph to an HTML file
-                output_file = "knowledge_graph.html"
+                output_file = "graph/knowledge_graph.html"
                 net.save_graph(output_file)
 
                 # Open the HTML file and display it within the Streamlit app
