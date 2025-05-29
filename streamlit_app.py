@@ -18,13 +18,13 @@ st.title("Knowledge Graph From Text")
 st.sidebar.title("Input document")
 input_method = st.sidebar.radio(
     "Choose an input method:",
-    ["Upload txt", "Input text"],  # Options for uploading a file or manually inputting text
+    ["Upload file", "Input text"],  # Options for uploading a file or manually inputting text
 )
 
-# Case 1: User chooses to upload a .txt file
-if input_method == "Upload txt":
+# Case 1: User chooses to upload a file
+if input_method == "Upload file":
     # File uploader widget in the sidebar
-    uploaded_file = st.sidebar.file_uploader(label="Upload file", type=["txt"])
+    uploaded_file = st.sidebar.file_uploader(label="Upload file (.txt or .md)", type=["txt", "md"])
 
     if uploaded_file is not None:
         # Read the uploaded file content and decode it as UTF-8 text
