@@ -1,75 +1,8 @@
-// Graph data extracted from PyVis output
-// This will be populated with actual data from the knowledge_graph.html
+// Empty initial data - graph will be populated from loaded files
+export const rawNodes = [];
+export const rawEdges = [];
 
-export const rawNodes = [
-  {id: "Electricity Provision", label: "Electricity Provision", group: "Concept", title: "Concept"},
-  {id: "Euro Oscon 2006", label: "Euro Oscon 2006", group: "Event", title: "Event"},
-  {id: "Fitness Function", label: "Fitness Function", group: "Concept", title: "Concept"},
-  {id: "Punctuated Equilibrium", label: "Punctuated Equilibrium", group: "Concept", title: "Concept"},
-  {id: "Google", label: "Google", group: "Organization", title: "Organization"},
-  {id: "Screw", label: "Screw", group: "Concept", title: "Concept"},
-  {id: "Goal", label: "Goal", group: "Concept", title: "Concept"},
-  {id: "Dan Ward", label: "Dan Ward", group: "Person", title: "Person"},
-  {id: "Spot Painting", label: "Spot Painting", group: "Concept", title: "Concept"},
-  {id: "Artificial Barrier To Change", label: "Artificial Barrier To Change", group: "Concept", title: "Concept"},
-  {id: "Sensing Engines (Ilc)", label: "Sensing Engines (Ilc)", group: "Concept", title: "Concept"},
-  {id: "Doctrine: Use Appropriate Methods", label: "Doctrine: Use Appropriate Methods", group: "Concept", title: "Concept"},
-  {id: "Online Ad Networks", label: "Online Ad Networks", group: "Concept", title: "Concept"},
-  {id: "Printing Press", label: "Printing Press", group: "Technology", title: "Technology"},
-  {id: "Bargaining Power Of Suppliers", label: "Bargaining Power Of Suppliers", group: "Concept", title: "Concept"},
-  {id: "Climatic Pattern: Peace, War And Wonder", label: "Climatic Pattern: Peace, War And Wonder", group: "Concept", title: "Concept"},
-  {id: "Themistocles", label: "Themistocles", group: "Person", title: "Person"},
-  {id: "Peace", label: "Peace", group: "Concept", title: "Concept"},
-  {id: "Material Waste", label: "Material Waste", group: "Concept", title: "Concept"},
-  {id: "Core", label: "Core", group: "Concept", title: "Concept"},
-  {id: "Lot C", label: "Lot C", group: "Concept", title: "Concept"},
-  {id: "Manipulation Of Images", label: "Manipulation Of Images", group: "Concept", title: "Concept"},
-  {id: "Region", label: "Region", group: "Region", title: "Region"},
-  {id: "Rapid Change", label: "Rapid Change", group: "Concept", title: "Concept"},
-  {id: "Dividends", label: "Dividends", group: "Action", title: "Action"},
-  {id: "Wow", label: "Wow", group: "Game", title: "Game"},
-  {id: "Economic Factors", label: "Economic Factors", group: "Concept", title: "Concept"},
-  {id: "Intellectual Property", label: "Intellectual Property", group: "Concept", title: "Concept"},
-  {id: "Ford", label: "Ford", group: "Organization", title: "Organization"},
-  {id: "Desire Not To Lose Value", label: "Desire Not To Lose Value", group: "Concept", title: "Concept"},
-  {id: "Bricks", label: "Bricks", group: "Concept", title: "Concept"},
-  {id: "Mere Mortals", label: "Mere Mortals", group: "Person", title: "Person"},
-  {id: "Evolution Curve", label: "Evolution Curve", group: "Concept", title: "Concept"},
-  {id: "Models", label: "Models", group: "Concept", title: "Concept"},
-  {id: "Decision-Making", label: "Decision-Making", group: "Concept", title: "Concept"},
-  {id: "Sources Of Worth", label: "Sources Of Worth", group: "Concept", title: "Concept"},
-  {id: "Traditional Enterprise", label: "Traditional Enterprise", group: "Concept", title: "Concept"},
-  {id: "Instagram", label: "Instagram", group: "Service", title: "Service"},
-  {id: "Digitizing Government", label: "Digitizing Government", group: "Book", title: "Book"},
-  {id: "Competitive Weapon", label: "Competitive Weapon", group: "Concept", title: "Concept"}
-  // Note: Truncated for file size - full data would include all 1009 nodes
-];
-
-export const rawEdges = [
-  {from: "Destitute Self", to: "Outcome-Based Approach", label: "associated_with", arrows: "to"},
-  {from: "Doctrine: Know Your Users (E.G. Customers, Shareholders, Regulators, Staff)", to: "Doctrine Categories", label: "principle", arrows: "to"},
-  {from: "Business Stakeholder", to: "Partnership Agreements", label: "signs", arrows: "to"},
-  {from: "Partner", to: "Partnership Agreements", label: "signs", arrows: "to"},
-  {from: "Osi", to: "Linux", label: "supports", arrows: "to"},
-  {from: "Government Digital Services", to: "Open Source", label: "uses", arrows: "to"},
-  {from: "Open Source", to: "Linux", label: "includes", arrows: "to"},
-  {from: "Government Digital Services", to: "Cross-Government Software", label: "provides", arrows: "to"},
-  {from: "Cross-Government Software", to: "Open Source", label: "based_on", arrows: "to"},
-  {from: "Civil Servants", to: "Government Digital Services", label: "work_for", arrows: "to"},
-  {from: "Government Digital Services", to: "User Needs", label: "focuses_on", arrows: "to"},
-  {from: "Government Digital Services", to: "Digital Services", label: "provides", arrows: "to"},
-  {from: "Government", to: "Taxpayers", label: "serves", arrows: "to"},
-  {from: "Taxpayers", to: "Government", label: "funds", arrows: "to"},
-  {from: "Government", to: "Digital Services", label: "provides", arrows: "to"},
-  {from: "Digital Services", to: "Citizens", label: "serves", arrows: "to"},
-  {from: "Citizens", to: "Taxpayers", label: "same_as", arrows: "to"},
-  {from: "Government Digital Services", to: "Policy", label: "implements", arrows: "to"},
-  {from: "Policy", to: "Citizens", label: "affects", arrows: "to"},
-  {from: "Government Digital Services", to: "Technology", label: "uses", arrows: "to"}
-  // Note: Truncated for file size - full data would include all 1850 edges
-];
-
-// Default vis.js options matching PyVis configuration
+// Default vis.js options matching PyVis configuration with performance optimizations
 export const networkOptions = {
     physics: {
         forceAtlas2Based: {
@@ -79,7 +12,12 @@ export const networkOptions = {
             springConstant: 0.08
         },
         minVelocity: 0.75,
-        solver: "forceAtlas2Based"
+        solver: "forceAtlas2Based",
+        stabilization: {
+            enabled: true,
+            iterations: 200,  // Reduced from 1000 for faster loading
+            updateInterval: 25
+        }
     },
     nodes: {
         font: {
@@ -123,27 +61,44 @@ export const networkOptions = {
         tooltipDelay: 300,
         zoomView: true,
         dragView: true
+    },
+    configure: {
+        enabled: false
+    },
+    groups: {
+        // Dynamic group coloring
+        Concept: { color: { background: '#3498db', border: '#2980b9' } },
+        Person: { color: { background: '#e74c3c', border: '#c0392b' } },
+        Organization: { color: { background: '#5dade2', border: '#3498db' } },
+        Object: { color: { background: '#9b59b6', border: '#8e44ad' } },
+        Event: { color: { background: '#1abc9c', border: '#16a085' } },
+        Service: { color: { background: '#2ecc71', border: '#27ae60' } },
+        Book: { color: { background: '#95a5a6', border: '#7f8c8d' } },
+        Chapter: { color: { background: '#34495e', border: '#2c3e50' } }
     }
 };
 
 // Function to process and clean the graph data
-export function processGraphData() {
-    // Convert raw data to vis.js DataSets
-    const nodes = new vis.DataSet(rawNodes.map(node => ({
+export function processGraphData(inputNodes = rawNodes, inputEdges = rawEdges) {
+    // Convert raw data to vis.js DataSets with performance optimizations
+    const nodes = new vis.DataSet(inputNodes.map(node => ({
         id: node.id,
         label: node.label,
-        title: `${node.title || node.group}\n\nClick for more details`,
-        group: node.group,
+        title: `${node.title || node.group || node.type}\n\nType: ${node.group || node.type}\nClick for more details`,
+        group: node.group || node.type || 'default',
         font: { color: 'white' },
-        shape: 'dot'
+        shape: 'dot',
+        size: Math.min(30, Math.max(10, (node.connections || 1) * 2)) // Dynamic sizing based on connections
     })));
 
-    const edges = new vis.DataSet(rawEdges.map(edge => ({
+    const edges = new vis.DataSet(inputEdges.map(edge => ({
         from: edge.from,
         to: edge.to,
         label: edge.label,
         title: `Relationship: ${edge.label}`,
-        arrows: 'to'
+        arrows: 'to',
+        width: 1,
+        selectionWidth: 3
     })));
 
     return { nodes, edges };

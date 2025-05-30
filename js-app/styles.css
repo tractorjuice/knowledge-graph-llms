@@ -17,10 +17,9 @@ body {
     display: grid;
     grid-template-areas: 
         "header header"
-        "controls graph"
-        "info graph";
+        "controls graph";
     grid-template-columns: 300px 1fr;
-    grid-template-rows: 60px 1fr auto;
+    grid-template-rows: 60px 1fr;
     height: 100vh;
     gap: 1px;
     background: #000;
@@ -144,6 +143,7 @@ body {
     text-align: center;
     z-index: 100;
     min-width: 300px;
+    display: none;
 }
 
 .loading-text {
@@ -170,13 +170,14 @@ body {
 
 /* Info Panel */
 .info-panel {
-    grid-area: info;
     background: rgba(0, 0, 0, 0.95);
-    border-right: 1px solid #444;
-    border-top: 1px solid #444;
-    max-height: 300px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    margin-top: 15px;
     display: none;
     flex-direction: column;
+    overflow-y: auto;
+    max-height: 400px;
 }
 
 .info-panel.visible {

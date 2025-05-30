@@ -1,14 +1,14 @@
 # Knowledge Graph Explorer - JavaScript App
 
-A modern, standalone JavaScript application for exploring knowledge graphs with interactive visualization, filtering, and export capabilities.
+A modern, standalone JavaScript application for exploring knowledge graphs with interactive visualisation, filtering, and export capabilities.
 
 ## 🚀 Features
 
-### Interactive Visualization
+### Interactive Visualisation
 - **High-performance rendering** using vis.js with forceAtlas2 physics
 - **Dynamic node highlighting** with connected node emphasis
 - **Responsive design** that adapts to different screen sizes
-- **Dark theme** optimized for long viewing sessions
+- **Dark theme** optimised for long viewing sessions
 
 ### Flexible Data Loading
 - **File Upload**: Drag & drop or click to upload JSON, GraphML, GML files
@@ -109,12 +109,12 @@ Upload the entire `js-app` folder to any web server. The app is completely self-
 
 ### Keyboard Shortcuts
 - `Ctrl/Cmd + F`: Focus search box
-- `Ctrl/Cmd + R`: Reset all filters  
+- `Ctrl/Cmd + R`: Reset all filters
 - `Ctrl/Cmd + S`: Show statistics modal
 - `Ctrl/Cmd + E`: Show export modal
 - `Escape`: Close any open modals
 
-## 🔧 Customization
+## 🔧 Customisation
 
 ### Updating Graph Data
 Replace the data in `js/graphData.js`:
@@ -131,7 +131,7 @@ export const rawEdges = [
 ];
 ```
 
-### Styling Customization
+### Styling Customisation
 Modify `styles.css` to change:
 - Color schemes and themes
 - Layout dimensions
@@ -161,7 +161,7 @@ Update `networkOptions` in `graphData.js` to adjust:
 ```javascript
 {
     from: "source-node-id",
-    to: "target-node-id", 
+    to: "target-node-id",
     label: "relationship-type",
     arrows: "to"
 }
@@ -169,7 +169,7 @@ Update `networkOptions` in `graphData.js` to adjust:
 
 ## 🎨 Themes & Styling
 
-The app uses a dark theme by default, optimized for:
+The app uses a dark theme by default, optimised for:
 - Reduced eye strain during long sessions
 - High contrast for better visibility
 - Professional appearance for presentations
@@ -198,8 +198,8 @@ The app uses a dark theme by default, optimized for:
 
 ## ⚡ Performance
 
-### Optimization Features
-- **Efficient rendering** with vis.js canvas-based visualization
+### Optimisation Features
+- **Efficient rendering** with vis.js canvas-based visualisation
 - **Smart filtering** that updates only visible elements
 - **Lazy loading** of UI components
 - **Debounced resize** handling for smooth window changes
@@ -214,7 +214,7 @@ The app uses a dark theme by default, optimized for:
 ## 🔍 Technical Details
 
 ### Dependencies
-- **vis.js**: Network visualization library
+- **vis.js**: Network visualisation library
 - **TomSelect**: Advanced select/dropdown components
 - **Vanilla JavaScript**: No framework dependencies
 
@@ -226,7 +226,7 @@ The app uses a dark theme by default, optimized for:
 
 ### Data Flow
 ```
-Raw Data → Processing → Filtering → Visualization → Export
+Raw Data → Processing → Filtering → Visualisation → Export
 ```
 
 ## 🤝 Contributing
@@ -251,9 +251,9 @@ exportCustomFormat() {
 ## 📈 Future Enhancements
 
 Potential improvements:
-- **3D visualization** mode
+- **3D visualisation** mode
 - **Collaborative editing** features
-- **Real-time data** synchronization
+- **Real-time data** synchronisation
 - **Advanced analytics** dashboard
 - **Custom node** rendering
 - **Graph algorithms** integration
@@ -289,5 +289,5 @@ This project is licensed under the MIT License - see the main project LICENSE fi
 
 ---
 
-**Built with ❤️ using modern web technologies**  
+**Built with ❤️ using modern web technologies**
 **Compatible with the Knowledge Graph Generator v2.0 ecosystem**

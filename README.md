@@ -112,6 +112,10 @@ The Streamlit application will open at http://localhost:8501.
 
 ## Usage Guide
 
+### Understanding Knowledge Graphs
+
+Knowledge graphs are powerful data structures that represent information as interconnected entities and relationships. To learn more about how knowledge graphs can be used in various applications and their benefits, see this comprehensive guide: [Everything You Ever Wanted to Know About GraphRAG](https://medium.com/prompt-engineering/everything-you-ever-wanted-to-know-about-graphrag-51144f28ebc3).
+
 ### Basic Workflow
 
 #### **Step 1: Generate Knowledge Graph (Streamlit)**

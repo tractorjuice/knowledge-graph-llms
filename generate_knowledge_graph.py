@@ -23,22 +23,18 @@ llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
 graph_transformer = LLMGraphTransformer(llm=llm)
 
 
-def chunk_text(text, max_tokens=100000):
+def chunk_text(text, max_tokens=50000):
     """
     Splits text into chunks based on markdown headings, respecting token limits.
 
     Args:
         text (str): Input text to be chunked.
-        max_tokens (int): Maximum tokens per chunk (default 100k to leave room for system prompts).
+        max_tokens (int): Maximum tokens per chunk (default 50k for better processing).
 
     Returns:
         list: List of text chunks.
     """
     encoding = tiktoken.encoding_for_model("gpt-4")
-
-    # If text is small enough, return as single chunk
-    if len(encoding.encode(text)) <= max_tokens:
-        return [text]
 
     # Define headers to split on
     headers_to_split_on = [
@@ -48,9 +44,14 @@ def chunk_text(text, max_tokens=100000):
         ("####", "Header 4"),
     ]
 
-    # Split by markdown headers first
+    # Always try markdown headers first (even for smaller files)
     markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
     md_header_splits = markdown_splitter.split_text(text)
+    
+    # If no headers found or single section, check if small enough for single chunk
+    if len(md_header_splits) <= 1:
+        if len(encoding.encode(text)) <= max_tokens:
+            return [text]
 
     # Convert approximate tokens to characters (rough estimate: 1 token ≈ 4 characters)
     max_chars = max_tokens * 4

@@ -54,6 +54,17 @@
                     <button id="resetFilters" class="btn btn-primary">🔄 Reset Filters</button>
                     <button id="centerGraph" class="btn btn-primary">🎯 Center Graph</button>
                 </div>
+                
+                <!-- Node Information Panel -->
+                <div class="info-panel" id="infoPanel">
+                    <div class="info-header">
+                        <h3>Node Information</h3>
+                        <button id="closeInfo" class="btn btn-small">×</button>
+                    </div>
+                    <div class="info-content" id="infoContent">
+                        <p>Click on a node to see detailed information...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -66,17 +77,6 @@
                 </div>
             </div>
             <div id="networkContainer" class="network-container"></div>
-        </div>
-
-        <!-- Info Panel -->
-        <div class="info-panel" id="infoPanel">
-            <div class="info-header">
-                <h3>Node Information</h3>
-                <button id="closeInfo" class="btn btn-small">×</button>
-            </div>
-            <div class="info-content" id="infoContent">
-                <p>Click on a node to see detailed information...</p>
-            </div>
         </div>
 
         <!-- Stats Modal -->
@@ -153,7 +153,6 @@
 
                         <div class="load-actions">
                             <button id="clearGraph" class="btn btn-warning">🗑️ Clear Current Graph</button>
-                            <button id="loadSampleData" class="btn btn-secondary">🎲 Load Sample Data</button>
                         </div>
                     </div>
                 </div>

@@ -1,14 +1,3 @@
-import { 
-    rawNodes, 
-    rawEdges, 
-    networkOptions, 
-    processGraphData, 
-    getNodeGroups, 
-    getEdgeLabels, 
-    searchNodes, 
-    getGraphStats 
-} from './graphData.js';
-
 import { GraphController } from './graphController.js';
 import { UIController } from './uiController.js';
 import { ExportController } from './exportController.js';
@@ -24,6 +13,7 @@ class KnowledgeGraphApp {
         this.originalData = null;
         this.filteredData = null;
         this.currentGraphData = { nodes: [], edges: [] };
+        this.isInitializing = true;
         
         this.init();
     }
@@ -33,98 +23,173 @@ class KnowledgeGraphApp {
             this.showLoading('Initializing application...');
             
             // Initialize controllers
+            console.log('Initializing controllers...');
             this.uiController = new UIController(this);
             this.exportController = new ExportController(this);
             this.dataLoader = new DataLoader();
             
-            // Try to load default data, fall back to sample data
-            await this.loadDefaultData();
-            
-            // Initialize graph
+            // Initialize graph controller but don't create network yet
+            console.log('Initializing graph...');
             this.graphController = new GraphController(this);
-            await this.graphController.initializeGraph();
             
             // Setup UI
+            console.log('Setting up event listeners...');
             this.setupEventListeners();
+            
+            console.log('Setting up filters...');
             this.setupFilters();
             
+            // Start with empty graph - just show welcome message
+            console.log('Starting with empty graph - use Load button to add data');
+            this.currentGraphData = { nodes: [], edges: [] };
+            
+            // Show welcome message immediately without network initialization
+            this.showEmptyGraphMessage();
+            
+            this.isInitializing = false; // Initialization complete
             this.hideLoading();
             console.log('Knowledge Graph App initialized successfully');
             
+            // Setup load event listeners last
+            setTimeout(() => {
+                try {
+                    console.log('Setting up load event listeners...');
+                    this.setupLoadEventListeners();
+                    console.log('Load event listeners setup completed');
+                } catch (error) {
+                    console.error('Error setting up load event listeners:', error);
+                }
+            }, 500);
+            
         } catch (error) {
             console.error('Failed to initialize app:', error);
-            this.showError('Failed to initialize application: ' + error.message);
+            console.error('Error stack:', error.stack);
+            // Don't show alert - just log the error
+            console.error('Application initialization failed, but continuing...');
         }
     }
 
     setupEventListeners() {
-        // Graph events
+        try {
+            console.log('Setting up event listeners...');
+            
+            // Graph events will be attached after network initialization in attachGraphEventListeners()
+
+            // UI events with error checking
+            const addEventListenerSafe = (id, event, handler) => {
+                try {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener(event, handler);
+                        console.log(`✓ Added listener for ${id}`);
+                    } else {
+                        console.warn(`✗ Element with id '${id}' not found`);
+                    }
+                } catch (error) {
+                    console.error(`✗ Error adding listener for ${id}:`, error);
+                }
+            };
+
+            addEventListenerSafe('resetFilters', 'click', () => this.resetFilters());
+            addEventListenerSafe('centerGraph', 'click', () => this.centerGraph());
+            addEventListenerSafe('searchInput', 'input', (e) => this.handleSearch(e.target.value));
+            
+            // Header controls
+            addEventListenerSafe('loadBtn', 'click', () => this.showLoad());
+            addEventListenerSafe('statsBtn', 'click', () => this.showStats());
+            addEventListenerSafe('exportBtn', 'click', () => this.showExport());
+            addEventListenerSafe('fullscreenBtn', 'click', () => this.toggleFullscreen());
+            
+            // Modal controls
+            addEventListenerSafe('closeStats', 'click', () => this.hideStats());
+            addEventListenerSafe('closeExport', 'click', () => this.hideExport());
+            addEventListenerSafe('closeLoad', 'click', () => this.hideLoad());
+            addEventListenerSafe('closeInfo', 'click', () => this.hideInfo());
+            
+            // Export actions
+            addEventListenerSafe('exportJSON', 'click', () => this.exportController.exportJSON());
+            addEventListenerSafe('exportCSV', 'click', () => this.exportController.exportCSV());
+            addEventListenerSafe('exportPNG', 'click', () => this.exportController.exportPNG());
+            addEventListenerSafe('exportGraphML', 'click', () => this.exportController.exportGraphML());
+            addEventListenerSafe('exportGML', 'click', () => this.exportController.exportGML());
+            
+            // Controls toggle
+            addEventListenerSafe('toggleControls', 'click', () => this.toggleControls());
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+            
+            // Load actions will be setup after full initialization
+            
+            console.log('Event listeners setup completed');
+        } catch (error) {
+            console.error('Error in setupEventListeners:', error);
+            throw error;
+        }
+    }
+
+    attachGraphEventListeners() {
         if (this.network) {
+            console.log('Attaching graph event listeners...');
             this.network.on('click', (params) => this.handleNodeClick(params));
             this.network.on('hoverNode', (params) => this.handleNodeHover(params));
             this.network.on('blurNode', () => this.handleNodeBlur());
             this.network.on('stabilizationProgress', (params) => this.updateStabilizationProgress(params));
             this.network.on('stabilizationIterationsDone', () => this.hideStabilizationProgress());
+        } else {
+            console.warn('Attempted to attach graph listeners, but network is not initialized.');
         }
-
-        // UI events
-        document.getElementById('resetFilters').addEventListener('click', () => this.resetFilters());
-        document.getElementById('centerGraph').addEventListener('click', () => this.centerGraph());
-        document.getElementById('searchInput').addEventListener('input', (e) => this.handleSearch(e.target.value));
-        
-        // Header controls
-        document.getElementById('loadBtn').addEventListener('click', () => this.showLoad());
-        document.getElementById('statsBtn').addEventListener('click', () => this.showStats());
-        document.getElementById('exportBtn').addEventListener('click', () => this.showExport());
-        document.getElementById('fullscreenBtn').addEventListener('click', () => this.toggleFullscreen());
-        
-        // Modal controls
-        document.getElementById('closeStats').addEventListener('click', () => this.hideStats());
-        document.getElementById('closeExport').addEventListener('click', () => this.hideExport());
-        document.getElementById('closeLoad').addEventListener('click', () => this.hideLoad());
-        document.getElementById('closeInfo').addEventListener('click', () => this.hideInfo());
-        
-        // Export actions
-        document.getElementById('exportJSON').addEventListener('click', () => this.exportController.exportJSON());
-        document.getElementById('exportCSV').addEventListener('click', () => this.exportController.exportCSV());
-        document.getElementById('exportPNG').addEventListener('click', () => this.exportController.exportPNG());
-        document.getElementById('exportGraphML').addEventListener('click', () => this.exportController.exportGraphML());
-        document.getElementById('exportGML').addEventListener('click', () => this.exportController.exportGML());
-        
-        // Load actions
-        this.setupLoadEventListeners();
-        
-        // Controls toggle
-        document.getElementById('toggleControls').addEventListener('click', () => this.toggleControls());
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
     }
 
     setupFilters() {
-        // Node type filter
-        const nodeFilter = new TomSelect('#nodeFilter', {
-            plugins: ['remove_button'],
-            maxItems: null,
-            options: getNodeGroups().map(group => ({value: group, text: group})),
-            onItemAdd: () => this.applyFilters(),
-            onItemRemove: () => this.applyFilters()
-        });
+        try {
+            // Check if TomSelect is available
+            if (typeof TomSelect === 'undefined') {
+                console.warn('TomSelect not loaded, filters disabled');
+                return;
+            }
 
-        // Relationship filter
-        const relationshipFilter = new TomSelect('#relationshipFilter', {
-            plugins: ['remove_button'],
-            maxItems: null,
-            options: getEdgeLabels().map(label => ({value: label, text: label})),
-            onItemAdd: () => this.applyFilters(),
-            onItemRemove: () => this.applyFilters()
-        });
+            // Check if filter elements exist
+            const nodeFilterEl = document.getElementById('nodeFilter');
+            const relationshipFilterEl = document.getElementById('relationshipFilter');
+            
+            if (!nodeFilterEl || !relationshipFilterEl) {
+                console.warn('Filter elements not found');
+                return;
+            }
 
-        this.nodeFilter = nodeFilter;
-        this.relationshipFilter = relationshipFilter;
+            // Initialize filters with empty options (will be populated when data loads)
+            const nodeFilter = new TomSelect('#nodeFilter', {
+                plugins: ['remove_button'],
+                maxItems: null,
+                options: [],
+                onItemAdd: () => this.applyFilters(),
+                onItemRemove: () => this.applyFilters()
+            });
+
+            // Relationship filter
+            const relationshipFilter = new TomSelect('#relationshipFilter', {
+                plugins: ['remove_button'],
+                maxItems: null,
+                options: [],
+                onItemAdd: () => this.applyFilters(),
+                onItemRemove: () => this.applyFilters()
+            });
+
+            this.nodeFilter = nodeFilter;
+            this.relationshipFilter = relationshipFilter;
+            console.log('Filters initialized successfully');
+        } catch (error) {
+            console.error('Failed to setup filters:', error);
+        }
     }
 
     applyFilters() {
+        if (!this.nodeFilter || !this.relationshipFilter || !this.originalData) {
+            console.log('Filters not ready, skipping filter application');
+            return;
+        }
+        
         const selectedNodeTypes = this.nodeFilter.getValue();
         const selectedRelationships = this.relationshipFilter.getValue();
         
@@ -161,11 +226,27 @@ class KnowledgeGraphApp {
             return;
         }
         
-        const searchResults = searchNodes(query);
+        // Check if we have data and network ready
+        if (!this.filteredData || !this.filteredData.nodes) {
+            console.log('Search: No data available yet');
+            return;
+        }
+        
+        const searchTerm = query.toLowerCase();
+        
+        // Get all current nodes from the DataSet
+        const allNodes = this.filteredData.nodes.get();
+        
+        // Find matching nodes
+        const searchResults = allNodes.filter(node => 
+            node.label.toLowerCase().includes(searchTerm) ||
+            (node.title && node.title.toLowerCase().includes(searchTerm)) ||
+            (node.group && node.group.toLowerCase().includes(searchTerm))
+        );
+        
         const resultIds = new Set(searchResults.map(node => node.id));
         
         // Highlight search results
-        const allNodes = this.filteredData.nodes.get();
         const updatedNodes = allNodes.map(node => ({
             ...node,
             color: resultIds.has(node.id) ? '#e74c3c' : undefined,
@@ -174,10 +255,19 @@ class KnowledgeGraphApp {
         
         this.filteredData.nodes.update(updatedNodes);
         
-        // Focus on first result if any
-        if (searchResults.length > 0) {
-            this.network.selectNodes([searchResults[0].id]);
-            this.network.focus(searchResults[0].id, {scale: 1.5});
+        // Focus on first result if any and network is ready
+        if (searchResults.length > 0 && this.network) {
+            try {
+                this.network.selectNodes([searchResults[0].id]);
+                this.network.focus(searchResults[0].id, {scale: 1.5});
+                console.log(`Search found ${searchResults.length} results, focused on: ${searchResults[0].label}`);
+            } catch (error) {
+                console.log('Search highlighting successful, but network focus failed:', error.message);
+            }
+        } else if (searchResults.length > 0) {
+            console.log(`Search found ${searchResults.length} results, but network not ready for focus`);
+        } else {
+            console.log('No search results found');
         }
     }
 
@@ -189,9 +279,7 @@ class KnowledgeGraphApp {
         }
     }
 
-    handleNodeHover(params) {
-        const nodeId = params.node;
-        const nodeData = this.originalData.nodes.get(nodeId);
+    handleNodeHover() {
         // Could add hover tooltip here if needed
     }
 
@@ -251,7 +339,7 @@ class KnowledgeGraphApp {
     }
 
     showStats() {
-        const stats = getGraphStats();
+        const stats = window.getGraphStats();
         const statsContent = document.getElementById('statsContent');
         
         statsContent.innerHTML = `
@@ -319,17 +407,22 @@ class KnowledgeGraphApp {
     }
 
     resetFilters() {
-        this.nodeFilter.clear();
-        this.relationshipFilter.clear();
-        document.getElementById('searchInput').value = '';
+        // Clear filters if they exist
+        if (this.nodeFilter) this.nodeFilter.clear();
+        if (this.relationshipFilter) this.relationshipFilter.clear();
         
-        // Reset to original data
-        this.filteredData.nodes.clear();
-        this.filteredData.edges.clear();
-        this.filteredData.nodes.add(this.originalData.nodes.get());
-        this.filteredData.edges.add(this.originalData.edges.get());
+        // Clear search input
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = '';
         
-        this.updateGraphInfo();
+        // Reset to original data if available
+        if (this.filteredData && this.originalData) {
+            this.filteredData.nodes.clear();
+            this.filteredData.edges.clear();
+            this.filteredData.nodes.add(this.originalData.nodes.get());
+            this.filteredData.edges.add(this.originalData.edges.get());
+            this.updateGraphInfo();
+        }
     }
 
     centerGraph() {
@@ -406,23 +499,32 @@ class KnowledgeGraphApp {
     }
 
     hideStabilizationProgress() {
-        const loadingBar = document.getElementById('loadingBar');
-        if (loadingBar) {
-            loadingBar.style.opacity = '0';
-            setTimeout(() => {
-                loadingBar.style.display = 'none';
-            }, 500);
-        }
+        this.hideLoading();
+        console.log('Network stabilization complete');
     }
 
     showLoading(message) {
         const loadingBar = document.getElementById('loadingBar');
         const loadingText = document.getElementById('loadingText');
         
-        if (loadingText) loadingText.textContent = message;
+        console.log('Loading:', message);
+        
+        if (loadingText) {
+            loadingText.textContent = message;
+        }
+        
         if (loadingBar) {
+            // Use the CSS styling, just make it visible
             loadingBar.style.display = 'block';
             loadingBar.style.opacity = '1';
+            loadingBar.style.zIndex = '10000';
+        }
+        
+        // Reset progress bar
+        const progressBar = document.getElementById('progressBar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = '#3498db';
         }
     }
 
@@ -437,8 +539,8 @@ class KnowledgeGraphApp {
     }
 
     showError(message) {
-        console.error(message);
-        alert('Error: ' + message); // Could be replaced with a better error UI
+        console.error('Error:', message);
+        // Just log errors during app lifecycle - no blocking alerts
     }
 
     updateGraphInfo() {
@@ -447,6 +549,62 @@ class KnowledgeGraphApp {
         
         // Update any status displays
         console.log(`Graph updated: ${nodeCount} nodes, ${edgeCount} edges`);
+    }
+
+
+    showEmptyGraphMessage() {
+        const networkContainer = document.getElementById('networkContainer');
+        if (networkContainer) {
+            networkContainer.style.display = 'none';
+        }
+        
+        // Create or show empty graph message
+        let emptyMessage = document.getElementById('emptyGraphMessage');
+        if (!emptyMessage) {
+            emptyMessage = document.createElement('div');
+            emptyMessage.id = 'emptyGraphMessage';
+            emptyMessage.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 60vh;
+                text-align: center;
+                color: #bdc3c7;
+                font-size: 18px;
+                background: transparent;
+            `;
+            emptyMessage.innerHTML = `
+                <div style="font-size: 64px; margin-bottom: 20px;">🕸️</div>
+                <h2 style="color: #3498db; margin: 0 0 10px 0;">Welcome to Knowledge Graph Explorer</h2>
+                <p style="margin: 0 0 20px 0;">No graph data loaded</p>
+                <p style="margin: 0; font-size: 16px;">Click the <strong>📁 Load Graph</strong> button to get started</p>
+            `;
+            
+            // Insert after network container
+            const graphContainer = document.querySelector('.graph-container');
+            if (graphContainer) {
+                graphContainer.appendChild(emptyMessage);
+            }
+        } else {
+            emptyMessage.style.display = 'flex';
+        }
+    }
+
+    hideEmptyGraphMessage() {
+        const emptyMessage = document.getElementById('emptyGraphMessage');
+        
+        if (emptyMessage) {
+            emptyMessage.style.display = 'none';
+        }
+        // Don't show network container yet - wait until graph is ready
+    }
+
+    showNetworkContainer() {
+        const networkContainer = document.getElementById('networkContainer');
+        if (networkContainer) {
+            networkContainer.style.display = 'block';
+        }
     }
 
     // Public API for controllers
@@ -467,33 +625,43 @@ class KnowledgeGraphApp {
     }
 
     // Data loading methods
-    async loadDefaultData() {
-        try {
-            // Try to load from generated files first
-            await this.loadFromQuickOptions('json');
-        } catch (error) {
-            console.log('No generated files found, loading sample data');
-            this.loadSampleData();
+
+
+    async processAndSetGraphData(data) {
+        // Only process if we have actual data
+        if (data.nodes.length === 0) {
+            console.log('No data to process, showing empty state');
+            this.currentGraphData = { nodes: [], edges: [] };
+            this.showEmptyGraphMessage();
+            return;
         }
-    }
-
-    loadSampleData() {
-        // Use the existing sample data from graphData.js
-        this.currentGraphData = { nodes: rawNodes, edges: rawEdges };
-        this.processAndSetGraphData(this.currentGraphData);
-    }
-
-    processAndSetGraphData(data) {
-        // Convert to the expected format
+        
+        // Hide empty graph message when loading real data
+        this.hideEmptyGraphMessage();
+        
+        // Initial showLoading for this phase
+        this.showLoading('Processing graph (Step 1/5)...');
+        await this.delay(100);
+        
+        // Get loading text element once for efficiency
+        const loadingText = document.getElementById('loadingText');
+        
+        // Convert to the expected format with performance improvements
+        console.log(`Processing graph with ${data.nodes.length} nodes and ${data.edges.length} edges`);
+        
         const processedNodes = data.nodes.map(node => ({
             id: node.id,
             label: node.label,
-            title: `${node.title || node.group}\n\nClick for more details`,
-            group: node.group,
+            title: node.label,
+            group: node.group || node.type || 'default',
+            type: node.type || node.group || 'default',
             font: { color: 'white' },
             shape: 'dot'
         }));
 
+        if (loadingText) loadingText.textContent = 'Processing relationships (Step 2/5)...';
+        await this.delay(100);
+        
         const processedEdges = data.edges.map(edge => ({
             from: edge.from,
             to: edge.to,
@@ -501,6 +669,9 @@ class KnowledgeGraphApp {
             title: `Relationship: ${edge.label}`,
             arrows: 'to'
         }));
+
+        if (loadingText) loadingText.textContent = 'Creating network visualization (Step 3/5)...';
+        await this.delay(100);
 
         this.originalData = {
             nodes: new vis.DataSet(processedNodes),
@@ -512,63 +683,146 @@ class KnowledgeGraphApp {
             edges: new vis.DataSet(processedEdges)
         };
 
-        this.currentGraphData = data;
+        this.currentGraphData = { nodes: processedNodes, edges: processedEdges };
+        
+        if (loadingText) loadingText.textContent = 'Setting up filters (Step 4/5)...';
+        await this.delay(100);
         this.updateFiltersAfterDataLoad();
+        
+        if (loadingText) loadingText.textContent = 'Rendering network (Step 5/5)... This may take a moment for large graphs.';
+        await this.delay(100);
+        
+        // Use setTimeout to allow UI to update before heavy graph rendering
+        setTimeout(async () => {
+            // Initialize network if not already done
+            if (!this.network) {
+                console.log('Initializing network for first time...');
+                await this.graphController.initializeGraph();
+                this.attachGraphEventListeners();
+            }
+            
+            if (this.network) {
+                // This showLoading starts the stabilization phase at 0%
+                this.showLoading('Stabilizing network layout... 0%');
+                this.network.setData(this.filteredData);
+                this.showNetworkContainer();
+            }
+        }, 200);
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     updateFiltersAfterDataLoad() {
-        // Update filter options
-        if (this.nodeFilter) {
-            this.nodeFilter.clearOptions();
-            this.nodeFilter.addOptions(getNodeGroups().map(group => ({value: group, text: group})));
+        // Update filter options based on current data
+        console.log('Updating filters with data:', this.currentGraphData.nodes.length, 'nodes');
+        console.log('Filter states:', { nodeFilter: !!this.nodeFilter, relationshipFilter: !!this.relationshipFilter });
+        
+        // Wait a bit for filters to be ready if they're not initialized yet
+        if (!this.nodeFilter || !this.relationshipFilter) {
+            console.log('Filters not ready, retrying in 500ms...');
+            setTimeout(() => this.updateFiltersAfterDataLoad(), 500);
+            return;
         }
-
-        if (this.relationshipFilter) {
+        
+        try {
+            // Update node filter
+            this.nodeFilter.clearOptions();
+            const nodeGroups = [...new Set(this.currentGraphData.nodes.map(node => node.group || node.type))].sort();
+            console.log('Node groups found:', nodeGroups);
+            
+            const nodeOptions = nodeGroups.map(group => ({value: group, text: group}));
+            console.log('Adding node options:', nodeOptions);
+            this.nodeFilter.addOptions(nodeOptions);
+            
+            // Update relationship filter
             this.relationshipFilter.clearOptions();
-            this.relationshipFilter.addOptions(getEdgeLabels().map(label => ({value: label, text: label})));
+            const edgeLabels = [...new Set(this.currentGraphData.edges.map(edge => edge.label))].sort();
+            console.log('Edge labels found:', edgeLabels.length, 'unique labels');
+            
+            const edgeOptions = edgeLabels.map(label => ({value: label, text: label}));
+            console.log('Adding edge options:', edgeOptions.slice(0, 5), '...');
+            this.relationshipFilter.addOptions(edgeOptions);
+            
+            console.log('Filters updated successfully');
+        } catch (error) {
+            console.error('Error updating filters:', error);
         }
 
         this.updateGraphInfo();
     }
 
     setupLoadEventListeners() {
-        // File upload
-        const fileInput = document.getElementById('fileInput');
-        const fileUploadArea = document.getElementById('fileUploadArea');
-        
-        fileUploadArea.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => this.handleFileSelect(e.target.files));
-        
-        // Drag and drop
-        fileUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.add('dragover');
-        });
-        
-        fileUploadArea.addEventListener('dragleave', () => {
-            fileUploadArea.classList.remove('dragover');
-        });
-        
-        fileUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.remove('dragover');
-            this.handleFileSelect(e.dataTransfer.files);
-        });
+        try {
+            console.log('Setting up load event listeners...');
+            
+            // Safe event listener helper
+            const addEventListenerSafe = (id, event, handler) => {
+                try {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener(event, handler);
+                        console.log(`✓ Load listener added for ${id}`);
+                    } else {
+                        console.warn(`✗ Load element '${id}' not found`);
+                    }
+                } catch (error) {
+                    console.error(`✗ Error adding load listener for ${id}:`, error);
+                }
+            };
 
-        // URL loading
-        document.getElementById('loadFromURL').addEventListener('click', () => this.loadFromURL());
-        document.getElementById('urlInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.loadFromURL();
-        });
+            // File upload
+            try {
+                const fileInput = document.getElementById('fileInput');
+                const fileUploadArea = document.getElementById('fileUploadArea');
+                
+                if (fileUploadArea && fileInput) {
+                    fileUploadArea.addEventListener('click', () => fileInput.click());
+                    fileInput.addEventListener('change', (e) => this.handleFileSelect(e.target.files));
+                    
+                    // Drag and drop
+                    fileUploadArea.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        fileUploadArea.classList.add('dragover');
+                    });
+                    
+                    fileUploadArea.addEventListener('dragleave', () => {
+                        fileUploadArea.classList.remove('dragover');
+                    });
+                    
+                    fileUploadArea.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        fileUploadArea.classList.remove('dragover');
+                        this.handleFileSelect(e.dataTransfer.files);
+                    });
+                    console.log('✓ File upload listeners added');
+                } else {
+                    console.warn('✗ File upload elements not found:', { fileInput: !!fileInput, fileUploadArea: !!fileUploadArea });
+                }
+            } catch (error) {
+                console.error('✗ Error setting up file upload:', error);
+            }
 
-        // Quick load buttons
-        document.getElementById('loadKnowledgeGraphJSON').addEventListener('click', () => this.loadFromQuickOptions('json'));
-        document.getElementById('loadKnowledgeGraphML').addEventListener('click', () => this.loadFromQuickOptions('graphml'));
-        document.getElementById('loadKnowledgeGML').addEventListener('click', () => this.loadFromQuickOptions('gml'));
+            // URL loading
+            addEventListenerSafe('loadFromURL', 'click', () => this.loadFromURL());
+            addEventListenerSafe('urlInput', 'keypress', (e) => {
+                if (e.key === 'Enter') this.loadFromURL();
+            });
 
-        // Other actions
-        document.getElementById('clearGraph').addEventListener('click', () => this.clearGraph());
-        document.getElementById('loadSampleData').addEventListener('click', () => this.loadSampleData());
+            // Quick load buttons
+            addEventListenerSafe('loadKnowledgeGraphJSON', 'click', () => this.loadFromQuickOptions('json'));
+            addEventListenerSafe('loadKnowledgeGraphML', 'click', () => this.loadFromQuickOptions('graphml'));
+            addEventListenerSafe('loadKnowledgeGML', 'click', () => this.loadFromQuickOptions('gml'));
+
+            // Other actions
+            addEventListenerSafe('clearGraph', 'click', () => this.clearGraph());
+            
+            console.log('Load event listeners setup completed successfully');
+        } catch (error) {
+            console.error('Critical error in setupLoadEventListeners:', error);
+            // Don't throw - just log
+        }
     }
 
     async handleFileSelect(files) {
@@ -584,9 +838,8 @@ class KnowledgeGraphApp {
                 data = await this.dataLoader.loadMultipleFiles(files);
             }
 
-            this.processAndSetGraphData(data);
+            await this.processAndSetGraphData(data);
             this.hideLoad();
-            this.hideLoading();
             
             this.uiController.showNotification(
                 `Loaded ${data.nodes.length} nodes and ${data.edges.length} edges successfully!`, 
@@ -594,7 +847,7 @@ class KnowledgeGraphApp {
             );
 
             // Update file list display
-            this.updateFileListDisplay(files, data);
+            this.updateFileListDisplay(files);
 
         } catch (error) {
             this.hideLoading();
@@ -611,9 +864,8 @@ class KnowledgeGraphApp {
             this.showLoading('Loading from URL...');
             const data = await this.dataLoader.loadFromURL(url);
             
-            this.processAndSetGraphData(data);
+            await this.processAndSetGraphData(data);
             this.hideLoad();
-            this.hideLoading();
             
             this.uiController.showNotification(
                 `Loaded ${data.nodes.length} nodes and ${data.edges.length} edges from URL!`, 
@@ -628,32 +880,42 @@ class KnowledgeGraphApp {
     }
 
     async loadFromQuickOptions(format) {
+        console.log(`Quick load requested for format: ${format}`);
+        
         const fileMap = {
-            'json': '../graph/knowledge_graph.json',
-            'graphml': '../graph/knowledge_graph.graphml', 
-            'gml': '../graph/knowledge_graph.gml'
+            'json': './graph/knowledge_graph.json',
+            'graphml': './graph/knowledge_graph.graphml', 
+            'gml': './graph/knowledge_graph.gml'
         };
 
         const url = fileMap[format];
-        if (!url) return;
+        if (!url) {
+            console.error(`No URL found for format: ${format}`);
+            return;
+        }
+
+        console.log(`Loading from URL: ${url}`);
 
         try {
             this.showLoading(`Loading ${format.toUpperCase()} file...`);
             const data = await this.dataLoader.loadFromURL(url);
             
-            this.processAndSetGraphData(data);
-            this.hideLoad();
-            this.hideLoading();
+            console.log(`Loaded data:`, data.nodes.length, 'nodes,', data.edges.length, 'edges');
             
-            this.uiController.showNotification(
-                `Loaded graph from ${format.toUpperCase()} file successfully!`, 
-                'success'
-            );
+            await this.processAndSetGraphData(data);
+            this.hideLoad();
+            
+            if (this.uiController) {
+                this.uiController.showNotification(
+                    `Loaded graph from ${format.toUpperCase()} file successfully!`, 
+                    'success'
+                );
+            }
 
         } catch (error) {
             this.hideLoading();
-            console.log(`Could not load ${format} file:`, error.message);
-            throw error; // Re-throw so caller can handle fallback
+            console.error(`Could not load ${format} file:`, error);
+            alert(`Failed to load ${format} file: ${error.message}`);
         }
     }
 
@@ -664,7 +926,7 @@ class KnowledgeGraphApp {
         this.uiController.showNotification('Graph cleared', 'info');
     }
 
-    updateFileListDisplay(files, data) {
+    updateFileListDisplay(files) {
         const selectedFilesDiv = document.getElementById('selectedFiles');
         selectedFilesDiv.innerHTML = '';
 
