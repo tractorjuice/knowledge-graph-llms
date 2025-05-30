@@ -33,7 +33,8 @@ export const networkOptions = {
     edges: {
         font: {
             color: 'white',
-            size: 12
+            size: 12,
+            weight: '300'
         },
         arrows: {
             to: {

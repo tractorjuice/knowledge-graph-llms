@@ -107,11 +107,7 @@ class KnowledgeGraphApp {
             addEventListenerSafe('closeInfo', 'click', () => this.hideInfo());
             
             // Export actions
-            addEventListenerSafe('exportJSON', 'click', () => this.exportController.exportJSON());
-            addEventListenerSafe('exportCSV', 'click', () => this.exportController.exportCSV());
             addEventListenerSafe('exportPNG', 'click', () => this.exportController.exportPNG());
-            addEventListenerSafe('exportGraphML', 'click', () => this.exportController.exportGraphML());
-            addEventListenerSafe('exportGML', 'click', () => this.exportController.exportGML());
             
             // Controls toggle
             addEventListenerSafe('toggleControls', 'click', () => this.toggleControls());
