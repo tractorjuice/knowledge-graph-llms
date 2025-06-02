@@ -552,6 +552,21 @@ body {
     }
 }
 
+/* Vis.js Edge Label Styling */
+.vis-network canvas {
+    font-weight: normal !important;
+}
+
+/* Target vis.js edge labels specifically */
+.vis-label {
+    font-weight: normal !important;
+}
+
+/* Alternative approach - target all text in the network container */
+#networkContainer text {
+    font-weight: normal !important;
+}
+
 /* Fullscreen Mode */
 .fullscreen {
     position: fixed !important;

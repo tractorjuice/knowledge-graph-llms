@@ -25,6 +25,10 @@ export const networkOptions = {
             size: 14
         },
         shape: 'dot',
+        color: {
+            background: '#3498db',
+            border: '#2980b9'
+        },
         scaling: {
             min: 10,
             max: 30
@@ -67,15 +71,17 @@ export const networkOptions = {
         enabled: false
     },
     groups: {
-        // Dynamic group coloring
+        // Dynamic group coloring - no red colors (reserved for search highlighting)
         Concept: { color: { background: '#3498db', border: '#2980b9' } },
-        Person: { color: { background: '#e74c3c', border: '#c0392b' } },
+        Person: { color: { background: '#f39c12', border: '#e67e22' } },
         Organization: { color: { background: '#5dade2', border: '#3498db' } },
         Object: { color: { background: '#9b59b6', border: '#8e44ad' } },
         Event: { color: { background: '#1abc9c', border: '#16a085' } },
         Service: { color: { background: '#2ecc71', border: '#27ae60' } },
         Book: { color: { background: '#95a5a6', border: '#7f8c8d' } },
-        Chapter: { color: { background: '#34495e', border: '#2c3e50' } }
+        Chapter: { color: { background: '#34495e', border: '#2c3e50' } },
+        Action: { color: { background: '#8e44ad', border: '#7d3c98' } },
+        Industry: { color: { background: '#17a2b8', border: '#138496' } }
     }
 };
 
@@ -99,7 +105,8 @@ export function processGraphData(inputNodes = rawNodes, inputEdges = rawEdges) {
         title: `Relationship: ${edge.label}`,
         arrows: 'to',
         width: 1,
-        selectionWidth: 3
+        selectionWidth: 3,
+        font: { color: 'white', size: 12, weight: '300' }
     })));
 
     return { nodes, edges };

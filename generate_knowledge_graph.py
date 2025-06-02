@@ -20,6 +20,28 @@ api_key = os.getenv("OPENAI_API_KEY")
 
 llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
 
+"""
+allowed_nodes = ["Chapter", "Illistrates", "Location", "Award", "ResearchField"]
+allowed_relationships = [
+    ("Person", "SPOUSE", "Person"),
+    ("Person", "AWARD", "Award"),
+    ("Person", "WORKS_AT", "Organization"),
+    ("Organization", "IN_LOCATION", "Location"),
+    ("Person", "FIELD_OF_RESEARCH", "ResearchField")
+]
+node_properties=["chapter", "death_date"]
+relationship_properties=["start_date"]
+props_defined = LLMGraphTransformer(
+    llm=llm,
+    #allowed_nodes=allowed_nodes,
+    allowed_relationships=allowed_relationships,
+    node_properties=node_properties,
+    #relationship_properties=relationship_properties
+)
+
+PROMPT: Help me define the above, based on the json file xxxx
+"""
+
 graph_transformer = LLMGraphTransformer(llm=llm)
 
 
@@ -34,20 +56,20 @@ def chunk_text(text, max_tokens=50000):
     Returns:
         list: List of text chunks.
     """
-    encoding = tiktoken.encoding_for_model("gpt-4")
+    encoding = tiktoken.encoding_for_model("gpt-4o")
 
     # Define headers to split on
     headers_to_split_on = [
         ("#", "Header 1"),
         ("##", "Header 2"),
-        ("###", "Header 3"),
-        ("####", "Header 4"),
+        #("###", "Header 3"),
+        #("####", "Header 4"),
     ]
 
     # Always try markdown headers first (even for smaller files)
     markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
     md_header_splits = markdown_splitter.split_text(text)
-    
+
     # If no headers found or single section, check if small enough for single chunk
     if len(md_header_splits) <= 1:
         if len(encoding.encode(text)) <= max_tokens:
@@ -97,7 +119,7 @@ async def extract_graph_data(chunks, progress_callback=None):
 
     for i, chunk in enumerate(chunks, 1):
         chunk_start = time.time()
-        
+
         message = f"Processing chunk {i}/{len(chunks)}..."
         print(message)
         if progress_callback:
@@ -109,15 +131,15 @@ async def extract_graph_data(chunks, progress_callback=None):
                 progress_callback(i-1, len(chunks), message, estimated_remaining)
             else:
                 progress_callback(i-1, len(chunks), message, None)
-        
+
         documents = [Document(page_content=chunk)]
         graph_documents = await graph_transformer.aconvert_to_graph_documents(documents)
         all_graph_documents.extend(graph_documents)
-        
+
         chunk_end = time.time()
         chunk_duration = chunk_end - chunk_start
         chunk_times.append(chunk_duration)
-        
+
         complete_message = f"✓ Chunk {i}/{len(chunks)} complete ({chunk_duration:.1f}s)"
         print(complete_message)
         if progress_callback:
@@ -136,48 +158,48 @@ async def extract_graph_data(chunks, progress_callback=None):
 def save_graph_formats(graph_documents, base_filename="graph/knowledge_graph"):
     """
     Save the graph in multiple formats (JSON, GraphML, GML).
-    
+
     Args:
         graph_documents (list): List of GraphDocument objects with nodes and relationships.
         base_filename (str): Base filename without extension.
-    
+
     Returns:
         dict: Dictionary with format names and file paths.
     """
     saved_files = {}
-    
+
     # Combine nodes and relationships from all graph documents
     all_nodes = []
     all_relationships = []
-    
+
     for graph_doc in graph_documents:
         all_nodes.extend(graph_doc.nodes)
         all_relationships.extend(graph_doc.relationships)
-    
+
     # Build lookup for valid nodes (deduplicate by ID)
     node_dict = {node.id: node for node in all_nodes}
-    
+
     # Filter valid relationships
     valid_relationships = []
     for rel in all_relationships:
         if rel.source.id in node_dict and rel.target.id in node_dict:
             valid_relationships.append(rel)
-    
+
     # Create NetworkX graph
     G = nx.DiGraph()
-    
+
     # Add nodes with attributes
     for node_id, node in node_dict.items():
         G.add_node(node_id, type=node.type, label=node.id)
-    
+
     # Add edges with attributes
     for rel in valid_relationships:
         G.add_edge(rel.source.id, rel.target.id, relationship=rel.type, label=rel.type.lower())
-    
+
     try:
         # Ensure directory exists
         os.makedirs(os.path.dirname(base_filename), exist_ok=True)
-        
+
         # Save as JSON
         json_file = f"{base_filename}.json"
         graph_data = {
@@ -188,22 +210,22 @@ def save_graph_formats(graph_documents, base_filename="graph/knowledge_graph"):
             json.dump(graph_data, f, indent=2, ensure_ascii=False)
         saved_files['JSON'] = os.path.abspath(json_file)
         print(f"Graph saved to {saved_files['JSON']}")
-        
+
         # Save as GraphML
         graphml_file = f"{base_filename}.graphml"
         nx.write_graphml(G, graphml_file)
         saved_files['GraphML'] = os.path.abspath(graphml_file)
         print(f"Graph saved to {saved_files['GraphML']}")
-        
+
         # Save as GML
         gml_file = f"{base_filename}.gml"
         nx.write_gml(G, gml_file)
         saved_files['GML'] = os.path.abspath(gml_file)
         print(f"Graph saved to {saved_files['GML']}")
-        
+
     except Exception as e:
         print(f"Error saving graph formats: {e}")
-    
+
     return saved_files
 
 
@@ -317,20 +339,20 @@ def generate_knowledge_graph(text, progress_callback=None):
     print(message)
     if progress_callback:
         progress_callback(len(chunks), len(chunks), message, 0)
-    
+
     net = visualize_graph(graph_documents)
-    
+
     # Save graph in multiple formats
     save_message = "Saving graph in multiple formats..."
     print(save_message)
     if progress_callback:
         progress_callback(len(chunks), len(chunks), save_message, 0)
-    
+
     saved_files = save_graph_formats(graph_documents)
-    
+
     complete_message = "✓ Graph generation complete!"
     print(complete_message)
     if progress_callback:
         progress_callback(len(chunks), len(chunks), complete_message, 0)
-    
+
     return net
